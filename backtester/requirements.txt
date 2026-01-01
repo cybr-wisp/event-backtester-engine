@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+pyyaml
+yfinance
+pytest
+ruff
+black
+matlab 
