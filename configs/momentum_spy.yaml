@@ -1,0 +1,30 @@
+# Backtest runtime configuration (v1.0)
+
+# Universe
+symbol: "SPY"
+
+# Portfolio
+starting_cash: 10000.0
+
+# Execution model
+order_type: "MKT"          # v1 supports market orders
+order_size: 10             # fixed shares per trade
+fee_per_fill: 0.50         # $ per fill
+slippage_bps: 1            # basis points (1 bp = 0.01%)
+
+# Market data
+data_path: "backtester/data/SPY.csv"
+timestamp_col: "ts"
+price_cols:
+  open: "open"
+  high: "high"
+  low: "low"
+  close: "close"
+  volume: "volume"
+
+# Optional run window (leave null to use full dataset)
+start_date: null           # e.g., "2020-01-01"
+end_date: null             # e.g., "2021-01-01"
+
+# Reproducibility
+seed: 42                   # only used if any randomness is introduced later
