@@ -147,32 +147,4 @@ These invariants are formally enforced and tested as part of the system contract
 
 ## 9.0 | Summary
 
-v1.0 prioritizes **clarity, correctness, and reproducibility** over raw performance or realism. By modeling trading as a strict sequence of events with explicit boundaries between modules, the engine mirrors the structure of real trading systems while remaining simple enough to reason about and extend for further updates.
-
-
-----
-
-## System Diagram
-
-```mermaid
-flowchart LR
-  DATA[(Historical OHLCV CSV)] --> FEED[DataFeed\nemit MarketEvent(t)]
-  FEED --> BUS[(EventBus / FIFO Queue)]
-
-  BUS --> DISPATCH[EventLoop\npop + dispatch by type]
-
-  DISPATCH -->|MarketEvent(t)| EXEC[Execution Engine]
-  DISPATCH -->|MarketEvent(t)| STRAT[Strategy Engine]
-  DISPATCH -->|MarketEvent(t)| PORT[Portfolio\nmark-to-market]
-
-  STRAT -->|SignalEvent(t)| BUS
-
-  DISPATCH -->|SignalEvent(t)| EXEC
-  EXEC -->|creates OrderEvent(t)\nstores as pending| EXEC
-
-  EXEC -->|on MarketEvent(t+1)\nemit FillEvent(t+1)| BUS
-
-  DISPATCH -->|FillEvent(t+1)| PORT
-
-  PORT --> REP[Reporting\ncharts + metrics]
-  DISPATCH -->|optional event log| REP
+gitv1.0 prioritizes **clarity, correctness, and reproducibility** over raw performance or realism. By modeling trading as a strict sequence of events with explicit boundaries between modules, the engine mirrors the structure of real trading systems while remaining simple enough to reason about and extend for further updates.
