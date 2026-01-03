@@ -4,6 +4,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
+from datetime import datetime
 from typing import Optional
 from typing import Union 
 
@@ -14,7 +15,8 @@ class EventType(str, Enum):
     ORDER = "ORDER"
     FILL = "FILL"
 
-Timestamp = Union [str, datetime] # 2026-01-02T18:30:00Z
+Timestamp = Union[str, datetime] # 2026-01-02T18:30:00Z
+
 # 1.0 
 @dataclass(frozen=True, slots=True)
 class MarketEvent:
@@ -46,13 +48,9 @@ class MarketEvent:
             except ValueError as e:
                 raise ValueError(f"SignalEvent.ts must be ISO-8601 parseable, got: {self.ts!r}") from e
 
-        # Side is enforced by Enum, but this catches accidental raw strings
-        if isinstance(self.side, str) and self.side not in (Side.BUY, Side.SELL):
-            raise ValueError(f"SignalEvent.side must be BUY or SELL, got {self.side!r}.")
-
-        if self.strength is not None and self.strength <= 0:
-            raise ValueError(f"SignalEvent.strength must be > 0 when provided, got {self.strength}.")
-
+class Side(str, Enum):
+    BUY = "BUY"
+    SELL = "SELL"
 
 @dataclass(frozen=True, slots=True)
 class SignalEvent:
@@ -101,7 +99,7 @@ class OrderEvent:
         return EventType.ORDER
     
     # enforcements after __init__
-    def __post__iniit__(self) -> None:
+    def __post__init__(self) -> None:
 
         if not self.symbol or not self.symbol.strip():
             raise ValueError("OrderEvent.symbol must be a non-empty string.")
@@ -123,7 +121,7 @@ class OrderEvent:
             raise ValueError(f"OrderEvent.order_type must be 'MKT' in v1.0, got {self.order_type!r}.")
 
 
-@dataclasss(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class FillEvent:
     ts: Timestamp                       # fill timestamp (often t+1)
     symbol: str
