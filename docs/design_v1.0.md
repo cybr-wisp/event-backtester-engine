@@ -71,10 +71,10 @@ Canonical schemas used in the engine.
 - `ts`, `symbol`, `open`, `high`, `low`, `close`, `volume`
 
 ### SignalEvent
-- `ts`, `symbol`, `side` *(BUY / SELL)*, `strength` *(optional)*
+- `ts`, `symbol`, `side` *(BUY / SELL)*, `strength` 
 
 ### OrderEvent
-- `ts`, `symbol`, `side`, `qty`, `order_type` *(MKT)*, `id` *(optional)*
+- `ts`, `symbol`, `side`, `qty`, `order_type` *(MKT)*, `id` 
 
 ### FillEvent
 - `ts`, `symbol`, `side`, `qty`, `fill_price`, `fee`
