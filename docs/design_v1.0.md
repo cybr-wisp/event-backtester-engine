@@ -156,53 +156,23 @@ v1.0 prioritizes **clarity, correctness, and reproducibility** over raw performa
 
 ```mermaid
 flowchart LR
-  DATA[(Historical OHLCV CSV)] --> FEED[DataFeed<br/>emit MarketEvent(t)]
-  FEED --> BUS[(EventBus / FIFO Queue)]
-
-  BUS --> DISPATCH[EventLoop<br/>pop + dispatch by type]
-
-  DISPATCH -->|MarketEvent(t)| EXEC[Execution Engine]
-  DISPATCH -->|MarketEvent(t)| STRAT[Strategy Engine]
-  DISPATCH -->|MarketEvent(t)| PORT[Portfolio<br/>mark-to-market]
-
-  STRAT -->|SignalEvent(t)| BUS
-
-  DISPATCH -->|SignalEvent(t)| EXEC
-  EXEC -->|stores pending order| EXEC
-
-  EXEC -->|on MarketEvent(t+1)<br/>emit FillEvent(t+1)| BUS
-
-  DISPATCH -->|FillEvent(t+1)| PORT
-
-  PORT --> REP[Reporting<br/>charts + metrics]
-
-
-flowchart LR
-  %% Data Source -> Feed -> Event Bus
   DATA[(Historical OHLCV CSV)] --> FEED[DataFeed\nemit MarketEvent(t)]
   FEED --> BUS[(EventBus / FIFO Queue)]
 
-  %% Main dispatch
   BUS --> DISPATCH[EventLoop\npop + dispatch by type]
 
-  %% MarketEvent path
   DISPATCH -->|MarketEvent(t)| EXEC[Execution Engine]
   DISPATCH -->|MarketEvent(t)| STRAT[Strategy Engine]
   DISPATCH -->|MarketEvent(t)| PORT[Portfolio\nmark-to-market]
 
-  %% Strategy emits SignalEvent
   STRAT -->|SignalEvent(t)| BUS
 
-  %% Execution consumes SignalEvent -> creates Order + schedules fill
   DISPATCH -->|SignalEvent(t)| EXEC
   EXEC -->|creates OrderEvent(t)\nstores as pending| EXEC
 
-  %% Execution may emit FillEvent on next bar
   EXEC -->|on MarketEvent(t+1)\nemit FillEvent(t+1)| BUS
 
-  %% Portfolio consumes fills
   DISPATCH -->|FillEvent(t+1)| PORT
 
-  %% Reporting
-  PORT -->|equity, trades, returns| REP[Reporting\ncharts + metrics]
+  PORT --> REP[Reporting\ncharts + metrics]
   DISPATCH -->|optional event log| REP
