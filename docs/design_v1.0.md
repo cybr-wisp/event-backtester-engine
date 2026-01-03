@@ -152,6 +152,31 @@ v1.0 prioritizes **clarity, correctness, and reproducibility** over raw performa
 
 ----
 
+## System Diagram
+
+```mermaid
+flowchart LR
+  DATA[(Historical OHLCV CSV)] --> FEED[DataFeed<br/>emit MarketEvent(t)]
+  FEED --> BUS[(EventBus / FIFO Queue)]
+
+  BUS --> DISPATCH[EventLoop<br/>pop + dispatch by type]
+
+  DISPATCH -->|MarketEvent(t)| EXEC[Execution Engine]
+  DISPATCH -->|MarketEvent(t)| STRAT[Strategy Engine]
+  DISPATCH -->|MarketEvent(t)| PORT[Portfolio<br/>mark-to-market]
+
+  STRAT -->|SignalEvent(t)| BUS
+
+  DISPATCH -->|SignalEvent(t)| EXEC
+  EXEC -->|stores pending order| EXEC
+
+  EXEC -->|on MarketEvent(t+1)<br/>emit FillEvent(t+1)| BUS
+
+  DISPATCH -->|FillEvent(t+1)| PORT
+
+  PORT --> REP[Reporting<br/>charts + metrics]
+
+
 flowchart LR
   %% Data Source -> Feed -> Event Bus
   DATA[(Historical OHLCV CSV)] --> FEED[DataFeed\nemit MarketEvent(t)]
