@@ -41,15 +41,12 @@ class MarketEvent:
             raise ValueError("MarketEvent.symbol must be a non-empty spring")
         # if ts is str (string), ensure it's parseable ISO-8601
         if isinstance(self.ts, str):
-            try: 
-                # fix Z-Format 
+            try:
                 datetime.fromisoformat(self.ts.replace("Z", "+00:00"))
             except ValueError as e:
-                raise ValueError (
-                    f"MarketEvent.ts must be ISO-8601 parseable, got : {self.ts!r}"
-                ) from e 
-            
-                # Side is enforced by Enum, but this catches accidental raw strings
+                raise ValueError(f"SignalEvent.ts must be ISO-8601 parseable, got: {self.ts!r}") from e
+
+        # Side is enforced by Enum, but this catches accidental raw strings
         if isinstance(self.side, str) and self.side not in (Side.BUY, Side.SELL):
             raise ValueError(f"SignalEvent.side must be BUY or SELL, got {self.side!r}.")
 
@@ -85,7 +82,7 @@ class SignalEvent:
         if isinstance(self.side, str) and self.side not in (Side.BUY, Side.SELL):
             raise ValueError(f"SignalEvent.side must be BUY or SELL, got {self.side!r}.")
         
-        # Strength, if provided, must be positive 
+        # Strength, if provided, must be
         if self.strength is not None and self.strength <= 0:
             raise ValueError(f"SignalEvent.strength must be > 0 when provided, got {self.strength}.")
         
