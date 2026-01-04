@@ -17,3 +17,10 @@ Thumbs.db
 
 # secrets / local
 .env
+
+
+# local datasets
+backtester/data/*.csv
+backtester/data/*.zip
+data/*.csv
+data/*.zip
