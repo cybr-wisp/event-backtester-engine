@@ -15,7 +15,7 @@ def main():
     q = SimpleQueue()
 
     data = CSVDataHandler(
-        csv_path="data/SPY.csv",
+        csv_path="backtester/data/SPY_1_min.csv",
         symbol="SPY",
         # If your CSV has different headers, change these:
         # ts_col="Date",
