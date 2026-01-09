@@ -16,7 +16,13 @@ def run_day4_spy_csv(num_bars: int = 200) -> None:
     events = EventQueue()
 
     # REAL DATA FEED (SPY 1-min CSV)
-    feed = CSVDataHandler(csv_path="backtester/data/SPY_1_min.csv", symbol="SPY")
+    feed = CSVDataHandler(
+    csv_path="backtester/data/SPY_1_min.csv",
+    symbol="SPY",
+    ts_col="date",
+    )
+
+    market_iter = feed.stream_market_events()  # <-- FIX: create iterator once
 
     strategy = DummyStrategy(events=events)
     execution = DummyExecutionHandler(events=events, qty=10.0, fee=1.0)
@@ -25,18 +31,16 @@ def run_day4_spy_csv(num_bars: int = 200) -> None:
     # ---- Day 4 visuals: keep an equity series we can show at the end ----
     equity_points: list[float] = []
 
+    bars_seen = 0
     last_close: float | None = None
 
-    bars_seen = 0
-
     while bars_seen < num_bars:
-    # 1) emit market events from CSV
-    # stream_market_events() may emit:
-    #   - one MarketEvent per call, OR
-    #   - many MarketEvents (possibly the whole file) in one call.
-        emitted = feed.stream_market_events()
-        if emitted is False:
+        # 1) emit ONE market event from CSV into the queue
+        try:
+            me = next(market_iter)  # <-- FIX: pull next MarketEvent
+        except StopIteration:
             break  # end of file / no more data
+        events.put(me)  # <-- FIX: publish to event queue
 
         # 2) drain queue (core event loop)
         while not events.empty():
@@ -57,9 +61,27 @@ def run_day4_spy_csv(num_bars: int = 200) -> None:
                 # execution stores last price (so fills use last close)
                 execution.on_market(me)
 
-                # if we've hit our bar budget, stop cleanly
+                # -------------------------
+                # Day 4 Visual #1 (per-bar MTM ticker) + equity point
+                # -------------------------
+                sym = "SPY"
+                qty = float(portfolio.positions.get(sym, 0.0))
+                holdings_value = qty * last_close
+                total = float(portfolio.cash) + holdings_value
+
+                equity_points.append(total)
+
+                print(
+                    f"[BAR {bars_seen:05d}] "
+                    f"close={last_close:.2f} | "
+                    f"cash={portfolio.cash:.2f} | "
+                    f"{sym}_qty={qty:.0f} | "
+                    f"{sym}_value={holdings_value:.2f} | "
+                    f"total={total:.2f}"
+                )
+
+                # stop cleanly once we've hit the bar budget
                 if bars_seen >= num_bars:
-                    # optional: flush remaining events so we exit cleanly
                     while not events.empty():
                         events.get()
                     break
@@ -79,37 +101,9 @@ def run_day4_spy_csv(num_bars: int = 200) -> None:
             else:
                 raise ValueError(f"Unknown event type: {event.type}")
 
-    # If stream_market_events() only emits once and queue was empty,
-    # loop continues and we call it again.
-
-
-        # ---------------------------------------------------------------------------------
-        # 2) LIVE PER-BAR VISUAL (ticker-tape accounting)
-        # total = cash + position_qty * last_close
-        # ---------------------------------------------------------------------------------
-        if last_close is None:
-            # If this happens, no MARKET event was emitted
-            last_close = 0.0
-
-        sym = "SPY"
-        qty = float(portfolio.positions.get(sym, 0.0))
-        holdings_value = qty * float(last_close)
-        total = float(portfolio.cash) + holdings_value
-
-        equity_points.append(total)
-
-        print(
-            f"[BAR {i:05d}] "
-            f"close={float(last_close):.2f} | "
-            f"cash={portfolio.cash:.2f} | "
-            f"{sym}_qty={qty:.0f} | "
-            f"{sym}_value={holdings_value:.2f} | "
-            f"total={total:.2f}"
-        )
-
-    # ---------------------------------------------------------------------------------
-    # 3) ASCII EQUITY CURVE SPARKLINE (end-of-run terminal visual)
-    # ---------------------------------------------------------------------------------
+    # -------------------------
+    # Day 4 Visual #2 (ASCII equity curve sparkline)
+    # -------------------------
     if not equity_points:
         print("\nNo bars processed — check CSV path or CSV handler.")
         return
@@ -130,7 +124,7 @@ def run_day4_spy_csv(num_bars: int = 200) -> None:
     print("\nEquity curve points (last 10):")
     start = max(0, len(equity_points) - 10)
     for j in range(start, len(equity_points)):
-        print(f"  bar {j:05d}: total={equity_points[j]:.2f}")
+        print(f"  bar {j + 1:05d}: total={equity_points[j]:.2f}")
 
 
 if __name__ == "__main__":
