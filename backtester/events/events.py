@@ -1,4 +1,4 @@
-# events.py
+# backtester/events.py
 
 from __future__ import annotations
 from dataclasses import dataclass
@@ -14,12 +14,12 @@ class EventType(str, Enum):
     FILL = "FILL"
 
 
-Timestamp = Union[str, datetime]  # e.g. "2026-01-02T18:30:00Z"
+Timestamp = Union[str, datetime]
 
 
 @dataclass(frozen=True, slots=True)
 class MarketEvent:
-    ts: Timestamp   # ISO-8601 string or datetime
+    ts: Timestamp
     symbol: str
     open: float
     high: float
@@ -32,14 +32,13 @@ class MarketEvent:
         return EventType.MARKET
 
     def __post_init__(self) -> None:
-        if self.symbol == "":
+        if not self.symbol or not self.symbol.strip():
             raise ValueError("MarketEvent.symbol must be a non-empty string")
 
         if isinstance(self.ts, str):
             try:
                 datetime.fromisoformat(self.ts.replace("Z", "+00:00"))
             except ValueError as e:
-                # ✅ FIX: correct class name in error message
                 raise ValueError(
                     f"MarketEvent.ts must be ISO-8601 parseable, got: {self.ts!r}"
                 ) from e
@@ -48,6 +47,11 @@ class MarketEvent:
 class Side(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
+
+
+class OrderType(str, Enum):
+    MKT = "MKT"
+    LMT = "LMT"
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,14 +92,14 @@ class OrderEvent:
     symbol: str
     side: Side
     qty: float
-    order_type: str = "MKT"  # v1.0 market only
+    order_type: OrderType = OrderType.MKT
+    limit_price: Optional[float] = None
     id: Optional[str] = None
 
     @property
     def type(self) -> EventType:
         return EventType.ORDER
 
-    # ✅ FIX: must be __post_init__ (not __post__init__)
     def __post_init__(self) -> None:
         if not self.symbol or not self.symbol.strip():
             raise ValueError("OrderEvent.symbol must be a non-empty string.")
@@ -114,10 +118,19 @@ class OrderEvent:
         if self.qty <= 0:
             raise ValueError(f"OrderEvent.qty must be > 0, got {self.qty}.")
 
-        if self.order_type != "MKT":
-            raise ValueError(
-                f"OrderEvent.order_type must be 'MKT' in v1.0, got {self.order_type!r}."
-            )
+        # Market vs Limit constraints (keeps simulator sane)
+        if self.order_type == OrderType.MKT:
+            if self.limit_price is not None:
+                raise ValueError("OrderEvent.limit_price must be None for MKT orders.")
+        elif self.order_type == OrderType.LMT:
+            if self.limit_price is None:
+                raise ValueError("OrderEvent.limit_price is required for LMT orders.")
+            if self.limit_price <= 0:
+                raise ValueError(
+                    f"OrderEvent.limit_price must be > 0, got {self.limit_price}."
+                )
+        else:
+            raise ValueError(f"Unknown order_type: {self.order_type!r}")
 
 
 @dataclass(frozen=True, slots=True)

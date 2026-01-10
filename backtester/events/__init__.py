@@ -1,4 +1,23 @@
+# backtester/events/__init__.py
 
-from .events import EventType, MarketEvent, SignalEvent, OrderEvent, FillEvent
+from .events import (
+    EventType,
+    Timestamp,
+    MarketEvent,
+    SignalEvent,
+    OrderEvent,
+    FillEvent,
+    Side,
+    OrderType,
+)
 
-__all__ = ["EventType", "MarketEvent", "SignalEvent", "OrderEvent", "FillEvent"]
+__all__ = [
+    "EventType",
+    "Timestamp",
+    "MarketEvent",
+    "SignalEvent",
+    "OrderEvent",
+    "FillEvent",
+    "Side",
+    "OrderType",
+]

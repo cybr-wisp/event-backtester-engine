@@ -1,0 +1,11 @@
+costs:
+  commission:
+    model: percent        # per_trade | percent | per_share
+    per_trade_fee: 1.0
+    percent_rate: 0.0005  # 5 bps of notional
+    per_share_fee: 0.000
+
+  slippage:
+    model: bps            # bps | spread
+    bps: 2.0
+    half_spread: 0.00
